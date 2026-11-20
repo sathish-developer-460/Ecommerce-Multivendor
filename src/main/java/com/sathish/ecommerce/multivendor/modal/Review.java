@@ -35,12 +35,10 @@ public class Review {
 
     @JsonIgnore
     @ManyToOne
-    @Column(nullable = false)
     // whenever new record is inserted into database.
     private Product product;
 
     @ManyToOne
-    @Column(nullable = false)
     private User user;
 
     @Column(nullable = false)
