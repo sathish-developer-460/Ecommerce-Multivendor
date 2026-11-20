@@ -1,7 +1,11 @@
 package com.sathish.ecommerce.multivendor.modal;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.List;
 
+import com.sathish.ecommerce.multivendor.domain.PaymentStatus;
+import com.sathish.ecommerce.multivendor.domain.OrderStatus;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Embedded;
 import jakarta.persistence.Entity;
@@ -50,4 +54,10 @@ public class Order {
     private OrderStatus orderStatus;
 
     private int totalItem;
+
+    private PaymentStatus paymentStatus = PaymentStatus.PENDING;
+
+    private LocalDateTime orderDate = LocalDateTime.now();
+    private LocalDateTime deliverDate = orderDate.plusDays(7);
+
 }
