@@ -1,6 +1,6 @@
 package com.sathish.ecommerce.multivendor.domain;
 
-public class PaymentMethod {
+public enum PaymentMethod {
     RAZORPAY,
     STRIPE
 }

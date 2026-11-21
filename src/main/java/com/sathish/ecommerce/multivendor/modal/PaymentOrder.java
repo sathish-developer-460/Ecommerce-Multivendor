@@ -14,6 +14,8 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
+import com.sathish.ecommerce.multivendor.domain.PaymentMethod;
+import com.sathish.ecommerce.multivendor.domain.PaymentOrderStatus;
 
 @Entity
 @Getter

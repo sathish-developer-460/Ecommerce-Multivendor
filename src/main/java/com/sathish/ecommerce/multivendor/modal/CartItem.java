@@ -1,7 +1,5 @@
 package com.sathish.ecommerce.multivendor.modal;
 
-import org.hibernate.annotations.ManyToAny;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import jakarta.persistence.Entity;

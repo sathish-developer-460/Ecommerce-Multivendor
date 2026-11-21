@@ -10,6 +10,8 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import com.sathish.ecommerce.multivendor.domain.HomeCategorySection;
+
 @Entity
 @Getter
 @Setter

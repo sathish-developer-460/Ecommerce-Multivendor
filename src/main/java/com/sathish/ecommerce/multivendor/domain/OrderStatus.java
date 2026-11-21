@@ -1,10 +1,11 @@
 package com.sathish.ecommerce.multivendor.domain;
 
-public class OrderStatus {
-    PENDING, 
+public enum OrderStatus {
+    PENDING,
     PLACED,
-    CONFIRMED, 
-    SHIPPED, 
-    DELIVERED, 
+    CONFIRMED,
+    SHIPPED,
+    DELIVERED,
     CANCELLED
+
 }
