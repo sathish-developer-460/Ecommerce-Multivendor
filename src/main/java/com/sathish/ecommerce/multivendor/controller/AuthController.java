@@ -5,27 +5,30 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+
+import com.sathish.ecommerce.multivendor.domain.USER_ROLE;
+import com.sathish.ecommerce.multivendor.response.AuthResponse;
 import com.sathish.ecommerce.multivendor.response.SignupRequest;
+import com.sathish.ecommerce.multivendor.service.AuthService;
 
 import lombok.RequiredArgsConstructor;
-
-import com.sathish.ecommerce.multivendor.modal.User;
-import com.sathish.ecommerce.multivendor.repository.UserRepository;
 
 @RestController
 @RequestMapping("/auth")
 @RequiredArgsConstructor
 public class AuthController {
 
-    private final UserRepository userRepository;
+    private final AuthService authService;
 
     @PostMapping("/signup")
-    public ResponseEntity<User> createUserHandler(@RequestBody SignupRequest request) {
-        User user = new User();
-        user.setEmail(request.getEmail());
-        user.setFullName(request.getFullName());
-        // Insert user into User table (database)
-        User savedUser = userRepository.save(user);
-        return ResponseEntity.ok(savedUser);
+    public ResponseEntity<AuthResponse> createUserHandler(@RequestBody SignupRequest request) {
+        String jwt = authService.createUser(request);
+
+        AuthResponse response = new AuthResponse();
+        response.setJwt(jwt);
+        response.setMessage("register success");
+        response.setRole(USER_ROLE.ROLE_CUSTOMER);
+
+        return ResponseEntity.ok(response);
     }
 }

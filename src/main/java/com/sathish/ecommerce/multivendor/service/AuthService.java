@@ -1,5 +1,9 @@
 package com.sathish.ecommerce.multivendor.service;
 
-public class AuthService {
+import com.sathish.ecommerce.multivendor.response.SignupRequest;
+
+public interface AuthService {
+
+    String createUser(SignupRequest request);
 
 }
