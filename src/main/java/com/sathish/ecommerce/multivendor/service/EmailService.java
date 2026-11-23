@@ -19,13 +19,14 @@ public class EmailService {
             throws MessagingException {
         try {
             MimeMessage mimeMessage = javaMailSender.createMimeMessage();
-            MimeMessageHelper mimeMessageHelper = new MimeMessageHelper(mimeMessage, "utf-8");
-            mimeMessageHelper.setSubject(subject);
-            mimeMessage.setText(text);
-            mimeMessageHelper.setTo(userEmail);
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, "utf-8");
+            helper.setSubject(subject);
+            helper.setText(text);
+            helper.setTo(userEmail);
             javaMailSender.send(mimeMessage);
-        } catch (MailException ex) {
-            throw new MailSendException("Failed to send email", ex);
+        } catch (MailException e) {
+            System.out.println("errorrrr -- " + e);
+            throw new MailSendException("Failed to send email", e);
         }
     }
 }

@@ -7,6 +7,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.sathish.ecommerce.multivendor.domain.USER_ROLE;
+import com.sathish.ecommerce.multivendor.modal.VerificationCode;
+import com.sathish.ecommerce.multivendor.response.ApiResponse;
 import com.sathish.ecommerce.multivendor.response.AuthResponse;
 import com.sathish.ecommerce.multivendor.response.SignupRequest;
 import com.sathish.ecommerce.multivendor.service.AuthService;
@@ -31,4 +33,14 @@ public class AuthController {
 
         return ResponseEntity.ok(response);
     }
+
+    @PostMapping("/sent/login-signup-otp")
+    public ResponseEntity<ApiResponse> sentOtpHandler(@RequestBody VerificationCode request) throws Exception {
+        authService.sentLogingOtp(request.getEmail());
+
+        ApiResponse response = new ApiResponse();
+        response.setMessage("otp sent successfully");
+        return ResponseEntity.ok(response);
+    }
+
 }

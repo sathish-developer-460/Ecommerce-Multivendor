@@ -59,7 +59,7 @@ public class AuthServiceImpl implements AuthService {
         verificationCodeRepository.save(verificationCode);
 
         String subject = "zosh bazaar login/signup otp";
-        String text = "your login/signup otp is - ";
+        String text = "your login/signup otp is - " + otp;
 
         try {
             emailService.sendVerificationOtpEmail(email, otp, subject, text);
