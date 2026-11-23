@@ -10,6 +10,7 @@ import com.sathish.ecommerce.multivendor.domain.USER_ROLE;
 import com.sathish.ecommerce.multivendor.modal.VerificationCode;
 import com.sathish.ecommerce.multivendor.response.ApiResponse;
 import com.sathish.ecommerce.multivendor.response.AuthResponse;
+import com.sathish.ecommerce.multivendor.response.LoginRequest;
 import com.sathish.ecommerce.multivendor.response.SignupRequest;
 import com.sathish.ecommerce.multivendor.service.AuthService;
 
@@ -43,4 +44,11 @@ public class AuthController {
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping("/signin")
+    public ResponseEntity<AuthResponse> loginHandler(@RequestBody LoginRequest request) throws Exception {
+
+        AuthResponse authResponse = authService.signing(request);
+
+        return ResponseEntity.ok(authResponse);
+    }
 }
