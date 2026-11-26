@@ -7,10 +7,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.sathish.ecommerce.multivendor.domain.USER_ROLE;
-import com.sathish.ecommerce.multivendor.modal.VerificationCode;
+import com.sathish.ecommerce.multivendor.request.LoginOtpRequest;
 import com.sathish.ecommerce.multivendor.response.ApiResponse;
 import com.sathish.ecommerce.multivendor.response.AuthResponse;
-import com.sathish.ecommerce.multivendor.response.LoginRequest;
+import com.sathish.ecommerce.multivendor.request.LoginRequest;
 import com.sathish.ecommerce.multivendor.response.SignupRequest;
 import com.sathish.ecommerce.multivendor.service.AuthService;
 
@@ -36,8 +36,9 @@ public class AuthController {
     }
 
     @PostMapping("/sent/login-signup-otp")
-    public ResponseEntity<ApiResponse> sentOtpHandler(@RequestBody VerificationCode request) throws Exception {
-        authService.sentLogingOtp(request.getEmail());
+    // Login as Customer & Seller
+    public ResponseEntity<ApiResponse> sentOtpHandler(@RequestBody LoginOtpRequest request) throws Exception {
+        authService.sentLogingOtp(request.getEmail(), request.getRole());
 
         ApiResponse response = new ApiResponse();
         response.setMessage("otp sent successfully");
@@ -47,7 +48,9 @@ public class AuthController {
     @PostMapping("/signin")
     public ResponseEntity<AuthResponse> loginHandler(@RequestBody LoginRequest request) throws Exception {
 
-        AuthResponse authResponse = authService.signing(request);
+        AuthResponse authResponse = (AuthResponse) authService.getClass()
+                .getMethod("signing", request.getClass())
+                .invoke(authService, request);
 
         return ResponseEntity.ok(authResponse);
     }

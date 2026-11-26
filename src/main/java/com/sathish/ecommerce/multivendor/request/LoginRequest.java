@@ -1,4 +1,4 @@
-package com.sathish.ecommerce.multivendor.response;
+package com.sathish.ecommerce.multivendor.request;
 
 import lombok.Data;
 

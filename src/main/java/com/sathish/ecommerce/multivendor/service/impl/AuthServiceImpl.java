@@ -17,13 +17,15 @@ import org.springframework.stereotype.Service;
 import com.sathish.ecommerce.multivendor.config.JwtProvider;
 import com.sathish.ecommerce.multivendor.domain.USER_ROLE;
 import com.sathish.ecommerce.multivendor.modal.Cart;
+import com.sathish.ecommerce.multivendor.modal.Seller;
 import com.sathish.ecommerce.multivendor.modal.User;
 import com.sathish.ecommerce.multivendor.modal.VerificationCode;
 import com.sathish.ecommerce.multivendor.repository.CartRepository;
+import com.sathish.ecommerce.multivendor.repository.SellerRepository;
 import com.sathish.ecommerce.multivendor.repository.UserRepository;
 import com.sathish.ecommerce.multivendor.repository.VerificationCodeRepository;
 import com.sathish.ecommerce.multivendor.response.AuthResponse;
-import com.sathish.ecommerce.multivendor.response.LoginRequest;
+import com.sathish.ecommerce.multivendor.request.LoginRequest;
 import com.sathish.ecommerce.multivendor.response.SignupRequest;
 import com.sathish.ecommerce.multivendor.service.AuthService;
 import com.sathish.ecommerce.multivendor.service.EmailService;
@@ -35,6 +37,7 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class AuthServiceImpl implements AuthService {
     private final UserRepository userRepository;
+    private final SellerRepository sellerRepository;
     private final PasswordEncoder passwordEncoder;
     private final CartRepository cartRepository;
     private final JwtProvider jwtProvider;
@@ -43,13 +46,25 @@ public class AuthServiceImpl implements AuthService {
     private final CustomUserServiceImpl customUserService;
 
     @Override
-    public void sentLogingOtp(String email) {
-        String SIGNING_PREFIX = "signin_";
+    public void sentLogingOtp(String email, USER_ROLE role) throws Exception {
+        String SIGNING_PREFIX = "signing_";
         if (email.startsWith(SIGNING_PREFIX)) {
             email = email.substring(SIGNING_PREFIX.length());
-            User user = userRepository.findByEmail(email);
-            if (user == null) {
-                throw new IllegalArgumentException("user not exist with provided email");
+
+            if (role.equals(USER_ROLE.ROLE_SELLER)) {
+                // if role is seller then excuite this one
+                Seller seller = sellerRepository.findByEmail(email);
+                if (seller == null) {
+                    throw new Exception("Seller not found");
+                }
+
+            } else {
+                // if role is customer then excuite this one
+                System.out.println("email " + email);
+                User user = userRepository.findByEmail(email);
+                if (user == null) {
+                    throw new IllegalArgumentException("user not exist with provided email");
+                }
             }
         }
         VerificationCode isExist = verificationCodeRepository.findByEmail(email);
@@ -132,13 +147,15 @@ public class AuthServiceImpl implements AuthService {
     }
 
     private Authentication authenticate(String username, String otp) {
+        // throws UsernameNotFoundException if the user or seller does not exist
         UserDetails userDetails = customUserService.loadUserByUsername(username);
 
-        if (userDetails == null) {
-            throw new BadCredentialsException("invalid username or password");
-        }
-        VerificationCode verificationCode = verificationCodeRepository.findByEmail(username);
-        // OTP which is from user side.
+        // OTPs are stored under the plain email, so remove the seller prefix first
+        String email = username.startsWith(CustomUserServiceImpl.SELLER_PREFIX)
+                ? username.substring(CustomUserServiceImpl.SELLER_PREFIX.length())
+                : username;
+
+        VerificationCode verificationCode = verificationCodeRepository.findByEmail(email);
         if (verificationCode == null || !verificationCode.getOtp().equals(otp)) {
             throw new BadCredentialsException("wrong otp");
         }

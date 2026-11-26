@@ -11,6 +11,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.OneToOne;
 import lombok.*;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.sathish.ecommerce.multivendor.domain.AccountStatus;
 import com.sathish.ecommerce.multivendor.domain.USER_ROLE;
 
@@ -31,6 +33,8 @@ public class Seller {
 
     @Column(unique = true, nullable = false)
     private String email;
+
+    @JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
 
     @Embedded
@@ -45,7 +49,8 @@ public class Seller {
     private String GSTIN;
     private USER_ROLE role = USER_ROLE.ROLE_SELLER;
 
-    private boolean isEmailVerified = false;
+    @Column(name = "is_email_verified")
+    private Boolean emailVerified = false;
 
     @Enumerated(EnumType.STRING)
     private AccountStatus accountStatus = AccountStatus.PENDING_VERIFICATION;
