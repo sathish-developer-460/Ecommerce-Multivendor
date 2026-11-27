@@ -23,14 +23,14 @@ import com.sathish.ecommerce.multivendor.modal.VerificationCode;
 import com.sathish.ecommerce.multivendor.request.LoginRequest;
 import com.sathish.ecommerce.multivendor.response.ApiResponse;
 import com.sathish.ecommerce.multivendor.response.AuthResponse;
+import com.sathish.ecommerce.multivendor.repository.VerificationCodeRepository;
 import com.sathish.ecommerce.multivendor.service.AuthService;
 import com.sathish.ecommerce.multivendor.service.EmailService;
 import com.sathish.ecommerce.multivendor.service.SellerService;
+
 import com.sathish.ecommerce.multivendor.service.VerificationService;
 import com.sathish.ecommerce.multivendor.service.impl.CustomUserServiceImpl;
 import com.sathish.ecommerce.multivendor.utils.OtpUtil;
-
-import com.sathish.ecommerce.multivendor.service.impl.CustomUserServiceImpl;
 
 import lombok.RequiredArgsConstructor;
 
@@ -43,6 +43,7 @@ public class SellerController {
     private final SellerService sellerService;
     private final VerificationService verificationService;
     private final EmailService emailService;
+    private final VerificationCodeRepository verificationCodeRepository;
 
     // Step 1: seller asks for a login OTP
     @PostMapping("/sent/login-otp")
@@ -69,12 +70,27 @@ public class SellerController {
         return ResponseEntity.ok(authResponse);
     }
 
-    // Verify seller email after registration: PATCH
-    // /sellers/verify/123456?email=a@b.com
+    // Verify seller email after registration:
+    // PATCH /sellers/verify/123456?email=a@b.com
+    // PATCH => you have to give ch.sathish369@gmail.com mail id in the Query Params
+    // in postman (Test the URL) to become "emailVerified" : true
+    // http://localhost:8080/sellers/verify/920481?email=ch.sathish369@gmail.com
+    // @PatchMapping("/verify/{otp}")
+    // public ResponseEntity<Seller> verifySellerEmail(@PathVariable String otp,
+    // @RequestParam String email) throws Exception {
+    // Seller seller = sellerService.verifyEmail(email, otp);
+    // return new ResponseEntity<>(seller, HttpStatus.OK);
+    // }
+
+    // with no @RequestParam:
     @PatchMapping("/verify/{otp}")
-    public ResponseEntity<Seller> verifySellerEmail(@PathVariable String otp,
-            @RequestParam String email) throws Exception {
-        Seller seller = sellerService.verifyEmail(email, otp);
+    public ResponseEntity<Seller> verifySellerEmail(@PathVariable String otp)
+            throws Exception {
+        VerificationCode verificationCode = verificationCodeRepository.findByOtp(otp);
+        if (verificationCode == null) {
+            throw new IllegalArgumentException("wrong otp...");
+        }
+        Seller seller = sellerService.verifyEmail(verificationCode.getEmail(), otp);
         return new ResponseEntity<>(seller, HttpStatus.OK);
     }
 

@@ -149,7 +149,14 @@ public class AuthServiceImpl implements AuthService {
     private Authentication authenticate(String username, String otp) {
         // throws UsernameNotFoundException if the user or seller does not exist
         UserDetails userDetails = customUserService.loadUserByUsername(username);
+        String SELLER_PREFIX = "seller_";
+        if (username.startsWith(SELLER_PREFIX)) {
+            username = username.substring(SELLER_PREFIX.length());
+        }
 
+        if (userDetails == null) {
+            throw new BadCredentialsException("invalid username");
+        }
         // OTPs are stored under the plain email, so remove the seller prefix first
         String email = username.startsWith(CustomUserServiceImpl.SELLER_PREFIX)
                 ? username.substring(CustomUserServiceImpl.SELLER_PREFIX.length())

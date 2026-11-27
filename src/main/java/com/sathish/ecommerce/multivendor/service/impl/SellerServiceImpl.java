@@ -9,6 +9,7 @@ import org.springframework.transaction.annotation.Transactional;
 import com.sathish.ecommerce.multivendor.config.JwtProvider;
 import com.sathish.ecommerce.multivendor.domain.AccountStatus;
 import com.sathish.ecommerce.multivendor.domain.USER_ROLE;
+import com.sathish.ecommerce.multivendor.exceptions.SellerException;
 import com.sathish.ecommerce.multivendor.modal.Address;
 import com.sathish.ecommerce.multivendor.modal.Seller;
 import com.sathish.ecommerce.multivendor.modal.VerificationCode;
@@ -31,9 +32,6 @@ public class SellerServiceImpl implements SellerService {
 
     @Override
     public Seller getSellerProfile(String jwt) {
-        if (jwt != null && jwt.startsWith("Bearer ")) {
-            jwt = jwt.substring(7);
-        }
         String email = jwtProvider.getEmailFromJwtToken(jwt);
         return getSellerByEmail(email);
     }
@@ -42,7 +40,7 @@ public class SellerServiceImpl implements SellerService {
     @Transactional
     public Seller createSeller(Seller seller) {
         if (sellerRepository.findByEmail(seller.getEmail()) != null) {
-            throw new IllegalStateException("Seller already exists, use a different email");
+            throw new SellerException("seller already exists, use a different email");
         }
         if (seller.getPickupAddress() == null) {
             throw new IllegalArgumentException("Pickup address is required");
@@ -64,16 +62,16 @@ public class SellerServiceImpl implements SellerService {
     }
 
     @Override
-    public Seller getSellerById(Long id) {
+    public Seller getSellerById(Long id) throws SellerException {
         return sellerRepository.findById(id)
-                .orElseThrow(() -> new IllegalStateException("Seller not found with id " + id));
+                .orElseThrow(() -> new SellerException("seller not found with id " + id));
     }
 
     @Override
     public Seller getSellerByEmail(String email) {
         Seller seller = sellerRepository.findByEmail(email);
         if (seller == null) {
-            throw new IllegalStateException("Seller not found with email " + email);
+            throw new SellerException("seller not found with email " + email);
         }
         return seller;
     }
@@ -97,7 +95,7 @@ public class SellerServiceImpl implements SellerService {
         if (seller.getEmail() != null && !seller.getEmail().equals(existing.getEmail())) {
             Seller other = sellerRepository.findByEmail(seller.getEmail());
             if (other != null && !other.getId().equals(existing.getId())) {
-                throw new IllegalStateException("Email is already in use");
+                throw new SellerException("email is already in use");
             }
             existing.setEmail(seller.getEmail());
         }
@@ -160,7 +158,7 @@ public class SellerServiceImpl implements SellerService {
     public Seller verifyEmail(String email, String otp) {
         VerificationCode code = verificationCodeRepository.findByEmail(email);
         if (code == null || otp == null || !otp.equals(code.getOtp())) {
-            throw new IllegalArgumentException("Invalid OTP");
+            throw new SellerException("invalid otp");
         }
         Seller seller = getSellerByEmail(email);
         seller.setEmailVerified(true);
