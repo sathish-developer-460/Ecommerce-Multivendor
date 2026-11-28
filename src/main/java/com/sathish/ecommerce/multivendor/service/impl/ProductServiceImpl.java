@@ -6,6 +6,8 @@ import java.util.ArrayList;
 
 import jakarta.persistence.criteria.Predicate;
 
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
@@ -95,12 +97,12 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public List<Product> searchProducts() {
-        return List.of();
+    public List<Product> searchProducts(String query) {
+        return productRepository.searchProduct(query);
     }
 
     @Override 
-    public Page<Product> getAllProduct(String category, String brand, String colors, String sizes, Integer minPrice, Integer maxPrice){
+    public Page<Product> getAllProducts(String category, String brand, String colors, String sizes, Integer minPrice, Integer maxPrice){
         Specification<Product> spec=(root,query, criteriaBuilder)->{
             List<Predicate>Predicates = new ArrayList<>();
             if(category != null){
@@ -108,7 +110,6 @@ public class ProductServiceImpl implements ProductService {
                 predicates.add(criteriaBuilder.equal(categoryJoin.get("categoryId"), category));
             }
             if(colors != null && !colors.isEmpty()){
-                System.out.println("color "+ color);
                 predicates.add(criteriaBuilder.equal(root.get("color"), colors));
             }
             //Filter by size (single value)
@@ -117,7 +118,7 @@ public class ProductServiceImpl implements ProductService {
 
             }
             if(minPrice != null){
-                predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("sellingPrice"), minPrice))
+                predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("sellingPrice"), minPrice));
             }
             if(maxPrice != null){
                 predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("sellingPrice"), maxPrice));
@@ -132,12 +133,32 @@ public class ProductServiceImpl implements ProductService {
             return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
 
         };
+
+
+
+        //Pagenation
+        Pageable pageable;
+        if(sort != null && !sort.isEmpty() ){
+            pageable= switch (sort) {
+                //pageSize:10
+                case "price_low" -> PageRequest.of(pageNumber != null? pageNumber:0, 10,
+                         Sort.by("sellingPrice").ascending());
+                case "price_high" -> PageRequest.of(pageNumber != null ? pageNumber:0, 10, 
+                        Sort.by("sellingPrice").descending());
+                default -> PageRequest.of(pageNumber!=null ? pageNumber:0, 10, 
+                        Sort.unsorted());
+                
+            };
+        }
+        else{
+            pageable = PageRequest.of(pageNumber != null ? pageNumber=0, 10, Sort.unsorted());
+        }
         
-        return null;
+         return productRepository.findAll(spec, pageable);
     }
 
     @Override
     public List<Product> getProductBySellerId(Long sellerId) {
-
+        return productRepository.findBySellerId(sellerId);
     }
 }
