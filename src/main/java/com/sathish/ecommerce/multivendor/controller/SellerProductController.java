@@ -2,8 +2,6 @@ package com.sathish.ecommerce.multivendor.controller;
 
 import java.util.List;
 
-import org.apache.catalina.connector.Response;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -17,35 +15,24 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.sathish.ecommerce.multivendor.exceptions.ProductException;
-import com.sathish.ecommerce.multivendor.exceptions.SellerException;
 import com.sathish.ecommerce.multivendor.modal.Product;
 import com.sathish.ecommerce.multivendor.modal.Seller;
+import com.sathish.ecommerce.multivendor.request.CreateProductRequest;
 import com.sathish.ecommerce.multivendor.service.ProductService;
 import com.sathish.ecommerce.multivendor.service.SellerService;
-import com.sathish.ecommerce.multivendor.service.UserService;
 
 import lombok.RequiredArgsConstructor;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/api/sellers/products")
+@RequestMapping("/sellers/products")
 public class SellerProductController {
     private final ProductService productService;
     private final SellerService sellerService;
-    private final UserService userService;
-    private final CategoryService categoryService;
-
-    @Autowired
-    SellerProductController(ProductService productService, SellerService sellerService) {
-        this.productService = productService;
-        this.sellerService = sellerService;
-        this.userService = userService;
-        this.categoryService = categoryService;
-    }
 
     @GetMapping()
     public ResponseEntity<List<Product>> getProductBySellerId(
-            @RequestHeader("Authorization") String jwt) throws ProductException, SellerException {
+            @RequestHeader("Authorization") String jwt) throws Exception {
         Seller seller = sellerService.getSellerProfile(jwt);
         List<Product> products = productService.getProductBySellerId(seller.getId());
         return new ResponseEntity<>(products, HttpStatus.OK);
@@ -56,8 +43,8 @@ public class SellerProductController {
             @RequestBody CreateProductRequest request,
             // access the authorization header and jwt token from the Authorization Header;
             @RequestHeader("Authorization") String jwt)
-            throws ExecutionControl.UserException,
-            ProductException, SellerException {
+            throws Exception {
+        System.out.println("error ------- " + jwt);
         Seller seller = sellerService.getSellerProfile(jwt);
         Product product = productService.CreateProduct(request, seller);
         return new ResponseEntity<>(product, HttpStatus.CREATED);
@@ -74,10 +61,9 @@ public class SellerProductController {
     }
 
     @PutMapping("/{productId}")
-    public ResponseEntity<Product> updateProduct(@PathVariable Long productId, @RequestBody Product product) {
-        throw ProductException{
-            Product updateProduct = productService.updateProduct(productId, product);
-            return new ResponseEntity<>(updateProduct, HttpStatus.OK);
-        }
+    public ResponseEntity<Product> updateProduct(@PathVariable Long productId, @RequestBody Product product)
+            throws ProductException {
+        Product updateProduct = productService.updateProduct(productId, product);
+        return new ResponseEntity<>(updateProduct, HttpStatus.OK);
     }
 }

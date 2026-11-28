@@ -2,6 +2,8 @@ package com.sathish.ecommerce.multivendor.service;
 
 import java.util.List;
 
+import org.springframework.data.domain.Page;
+
 import com.sathish.ecommerce.multivendor.exceptions.ProductException;
 import com.sathish.ecommerce.multivendor.modal.Product;
 import com.sathish.ecommerce.multivendor.modal.Seller;

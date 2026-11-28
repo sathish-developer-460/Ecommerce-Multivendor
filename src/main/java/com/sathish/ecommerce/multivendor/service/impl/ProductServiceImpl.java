@@ -5,11 +5,16 @@ import java.util.List;
 import java.util.ArrayList;
 
 import jakarta.persistence.criteria.Predicate;
+import jakarta.persistence.criteria.Join;
 
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+
+import lombok.RequiredArgsConstructor;
 
 import com.sathish.ecommerce.multivendor.exceptions.ProductException;
 import com.sathish.ecommerce.multivendor.modal.Category;
@@ -21,35 +26,36 @@ import com.sathish.ecommerce.multivendor.request.CreateProductRequest;
 import com.sathish.ecommerce.multivendor.service.ProductService;
 
 @Service
-@RequestArgsConstructor
+@RequiredArgsConstructor
 public class ProductServiceImpl implements ProductService {
     private final ProductRepository productRepository;
 
     private final CategoryRepository categoryRepository;
 
     @Override
-    public Product createProduct(CreateProductRequest request, Seller seller) {
-        Category category1 = categoryRepository.findCategoryId(request.getCategory());
+    public Product CreateProduct(CreateProductRequest request, Seller seller) {
+        Category category1 = categoryRepository.findByCategoryId(request.getCategory());
         if (category1 == null) {
             Category category = new Category();
-            category.setCategory(request.getCategory());
+            category.setCategoryId(request.getCategory());
             category.setLevel(1);
             category1 = categoryRepository.save(category);
         }
         Category category2 = categoryRepository.findByCategoryId(request.getCategory2());
-        if(category2 == null){
-            Category category= new Category;
+        if (category2 == null) {
+            Category category = new Category();
             category.setCategoryId(request.getCategory2());
             category.setLevel(2);
             category.setParentCategory(category1);
             category2 = categoryRepository.save(category);
         }
-        Category category3= categoryRepository.findByCategoryId(request.getCategory3());
-        if(category3= null){
-            Category category= new Category();
+        Category category3 = categoryRepository.findByCategoryId(request.getCategory3());
+        if (category3 == null) {
+            Category category = new Category();
             category.setCategoryId(request.getCategory3());
             category.setLevel(3);
-            category.setParenetCategory(category);
+            category.setParentCategory(category2);
+            category3 = categoryRepository.save(category);
         }
         int discountPercentage = calculateDiscountPercentage(request.getMrpPrice(), request.getSellingPrice());
         Product product = new Product();
@@ -71,7 +77,7 @@ public class ProductServiceImpl implements ProductService {
         if (mrpPrice < 0) {
             throw new IllegalArgumentException("Actual price must be greater than 0");
         }
-        double discount = myprice - sellingPrice;
+        double discount = mrpPrice - sellingPrice;
         // convert this discount into percentage
         double discountPercentage = (discount / mrpPrice) * 100;
         return (int) discountPercentage;
@@ -97,64 +103,66 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public List<Product> searchProducts(String query) {
-        return productRepository.searchProduct(query);
+    public List<Product> searchProducts() {
+        return productRepository.findAll();
     }
 
-    @Override 
-    public Page<Product> getAllProducts(String category, String brand, String colors, String sizes, Integer minPrice, Integer maxPrice){
-        Specification<Product> spec=(root,query, criteriaBuilder)->{
-            List<Predicate>Predicates = new ArrayList<>();
-            if(category != null){
-                Join<Product, Category>categoryJoin = root.join("category");
-                predicates.add(criteriaBuilder.equal(categoryJoin.get("categoryId"), category));
+    @Override
+    public Page<Product> getAllProducts(String category, String brand, String colors, String sizes,
+            Integer minPrice, Integer maxPrice, Integer minDiscount, String sort, String stock,
+            Integer pageNumber) {
+        Specification<Product> spec = (root, query, criteriaBuilder) -> {
+            List<Predicate> Predicates = new ArrayList<>();
+            if (category != null) {
+                Join<Product, Category> categoryJoin = root.join("category");
+                Predicates.add(criteriaBuilder.equal(categoryJoin.get("categoryId"), category));
             }
-            if(colors != null && !colors.isEmpty()){
-                predicates.add(criteriaBuilder.equal(root.get("color"), colors));
+            if (brand != null && !brand.isEmpty()) {
+                Predicates.add(criteriaBuilder.equal(root.get("brand"), brand));
             }
-            //Filter by size (single value)
-            if(sizes != null && !sizes.isEmpty()){
-                predicates.add(criteriaBuilder.equal(root.get("size"), sizes));
+            if (colors != null && !colors.isEmpty()) {
+                Predicates.add(criteriaBuilder.equal(root.get("color"), colors));
+            }
+            // Filter by size (single value)
+            if (sizes != null && !sizes.isEmpty()) {
+                Predicates.add(criteriaBuilder.equal(root.get("size"), sizes));
 
             }
-            if(minPrice != null){
-                predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("sellingPrice"), minPrice));
+            if (minPrice != null) {
+                Predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("sellingPrice"), minPrice));
             }
-            if(maxPrice != null){
-                predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("sellingPrice"), maxPrice));
+            if (maxPrice != null) {
+                Predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get("sellingPrice"), maxPrice));
             }
-            //min discount 20 % 
-            if(minDiscount != null){
-                predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("discountPercentage"), minDiscount));
+            // min discount 20 %
+            if (minDiscount != null) {
+                Predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get("discountPercentage"), minDiscount));
             }
-            if(stock != null){
-                predicates.add(criteriaBuilder.equal(root.get("stock"), stock));
+            if (stock != null) {
+                Predicates.add(criteriaBuilder.equal(root.get("stock"), stock));
             }
-            return criteriaBuilder.and(predicates.toArray(new Predicate[0]));
+            return criteriaBuilder.and(Predicates.toArray(new Predicate[0]));
 
         };
 
-
-
-        //Pagenation
+        // Pagenation
         Pageable pageable;
-        if(sort != null && !sort.isEmpty() ){
-            pageable= switch (sort) {
-                //pageSize:10
-                case "price_low" -> PageRequest.of(pageNumber != null? pageNumber:0, 10,
-                         Sort.by("sellingPrice").ascending());
-                case "price_high" -> PageRequest.of(pageNumber != null ? pageNumber:0, 10, 
+        if (sort != null && !sort.isEmpty()) {
+            pageable = switch (sort) {
+                // pageSize:10
+                case "price_low" -> PageRequest.of(pageNumber != null ? pageNumber : 0, 10,
+                        Sort.by("sellingPrice").ascending());
+                case "price_high" -> PageRequest.of(pageNumber != null ? pageNumber : 0, 10,
                         Sort.by("sellingPrice").descending());
-                default -> PageRequest.of(pageNumber!=null ? pageNumber:0, 10, 
+                default -> PageRequest.of(pageNumber != null ? pageNumber : 0, 10,
                         Sort.unsorted());
-                
+
             };
+        } else {
+            pageable = PageRequest.of(pageNumber != null ? pageNumber : 0, 10, Sort.unsorted());
         }
-        else{
-            pageable = PageRequest.of(pageNumber != null ? pageNumber=0, 10, Sort.unsorted());
-        }
-        
-         return productRepository.findAll(spec, pageable);
+
+        return productRepository.findAll(spec, pageable);
     }
 
     @Override
